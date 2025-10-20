@@ -51,3 +51,30 @@ Finally, I set up a detection system.
 
 ## Conclusion
 This project successfully hardened a vulnerable web server by securing its network perimeter, applying the principle of least privilege, and enabling proactive monitoring.
+
+
+graph TD
+    subgraph Internet
+        Attacker[Attacker]
+        Admin[Authorized Admin]
+    end
+
+    subgraph GCP VPC
+        IAP[Identity-Aware Proxy (Zero-Trust)]
+        Firewall[VPC Firewall (Allow IAP only)]
+        VM[Compute Engine VM (Web Server)]
+        SA[Custom Service Account (No Permissions)]
+        VM -- Attached --> SA
+        IAP -- Forwards Authorized Traffic --> Firewall
+        Firewall -- Allows --> VM
+        
+        subgraph Monitoring & Logging
+            VM -- Generates SSH/System Logs --> Logging[Cloud Logging]
+            Logging --> Alert[Cloud Monitoring Alert (Failed SSH)]
+            Alert --> Notify[Notification Channel]
+        end
+    end
+
+    Attacker -- SSH 0.0.0.0/0 --> Firewall
+    Firewall -- BLOCKED --> Attacker
+    Admin -- SSH via gcloud --> IAP
